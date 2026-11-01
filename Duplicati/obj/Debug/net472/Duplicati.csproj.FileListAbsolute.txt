@@ -1,0 +1,9 @@
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/bin/Debug/net472/Duplicati.dll
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/bin/Debug/net472/Duplicati.pdb
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/obj/Debug/net472/Duplicati.csproj.AssemblyReference.cache
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/obj/Debug/net472/Duplicati.GeneratedMSBuildEditorConfig.editorconfig
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/obj/Debug/net472/Duplicati.AssemblyInfoInputs.cache
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/obj/Debug/net472/Duplicati.AssemblyInfo.cs
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/obj/Debug/net472/Duplicati.csproj.CoreCompileInputs.cache
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/obj/Debug/net472/Duplicati.dll
+/home/ryleeeee/Documents/GitHub/duplicati/Duplicati/obj/Debug/net472/Duplicati.pdb

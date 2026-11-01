@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copy to Duplicati.csproj.user (git-ignored) and point BeatSaberDir at your modded Beat Saber
+  install. BSMT-Rider can generate this file for you when you open the solution; if it writes a
+  different property than BeatSaberDir, copying this file is the fallback.
+-->
+<Project>
+  <PropertyGroup>
+    <BeatSaberDir>/YOUR/INSTALL/DIR</BeatSaberDir>
+  </PropertyGroup>
+</Project>

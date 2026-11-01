@@ -1,0 +1,90 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Plugin metadata (PluginId, PluginName, Authors, Version, GameVersion, Description)
+       lives in ../Directory.Build.props. -->
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>Duplicati</AssemblyName>
+    <RootNamespace>Duplicati</RootNamespace>
+    <DebugType>portable</DebugType>
+
+    <!-- Beat Saber install folder. Set it in Duplicati.csproj.user (BSMT-Rider writes this file for
+         you, or copy the .example), with -p:BeatSaberDir=..., or via BEAT_SABER_DIR. -->
+    <BeatSaberDir Condition="'$(BeatSaberDir)' == ''">$(BEAT_SABER_DIR)</BeatSaberDir>
+    <CopyToPlugins Condition="'$(CopyToPlugins)' == ''">true</CopyToPlugins>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only BSIPA and the Newtonsoft.Json that ships with the game are referenced; no game
+         assemblies are needed, which is why one DLL works for every supported game version.
+         Forward slashes work for MSBuild on both Windows and Linux. -->
+    <Reference Include="IPA.Loader" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/IPA.Loader.dll" Private="false" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/Newtonsoft.Json.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lets the project build without a .NET Framework developer pack (Linux/macOS, CI). -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="CheckBeatSaberDir" BeforeTargets="ResolveAssemblyReferences"
+          Condition="'$(BeatSaberDir)' == '' Or !Exists('$(BeatSaberDir)/Beat Saber_Data/Managed/IPA.Loader.dll')">
+    <Error Text="BeatSaberDir is not set or is not a BSIPA-patched Beat Saber install (IPA.Loader.dll not found under Beat Saber_Data/Managed). Set it in Duplicati.csproj.user (see Duplicati.csproj.user.example), or pass -p:BeatSaberDir=..." />
+  </Target>
+
+  <!-- BSIPA requires manifest.json as an embedded resource. The embed is declared statically here
+       (evaluation time); only the file's content is generated before compile, so GameVersion can
+       change per build. It is embedded under both "<RootNamespace>.manifest.json" (the name BSMT-built
+       mods get by default) and plain "manifest.json", because I could not confirm which name BSIPA
+       matches. Once one is confirmed working the other can be removed. -->
+  <!-- Two separate files (same content): the SDK rejects the same path included twice (NETSDK1022). -->
+  <PropertyGroup>
+    <ManifestPath>$(MSBuildProjectDirectory)/obj/Duplicati.manifest.json</ManifestPath>
+    <ManifestPathPlain>$(MSBuildProjectDirectory)/obj/Duplicati.manifest.plain.json</ManifestPathPlain>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(ManifestPath)" LogicalName="$(RootNamespace).manifest.json" />
+    <EmbeddedResource Include="$(ManifestPathPlain)" LogicalName="manifest.json" />
+  </ItemGroup>
+
+  <Target Name="GenerateManifest" BeforeTargets="CoreCompile">
+    <MakeDir Directories="$(MSBuildProjectDirectory)/obj" />
+    <ItemGroup>
+      <ManifestLine Include="{" />
+      <ManifestLine Include='  "author": "$(Authors)",' />
+      <ManifestLine Include='  "description": "$(Description)",' />
+      <ManifestLine Include='  "gameVersion": "$(GameVersion)",' />
+      <ManifestLine Include='  "id": "$(PluginId)",' />
+      <ManifestLine Include='  "name": "$(PluginName)",' />
+      <ManifestLine Include='  "version": "$(Version)",' />
+      <ManifestLine Include='  "dependsOn": { "BSIPA": "^4.3.0" }' />
+      <ManifestLine Include="}" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(ManifestPath)" Lines="@(ManifestLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile File="$(ManifestPathPlain)" Lines="@(ManifestLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Importance="high" Text="Wrote $(ManifestPath) (gameVersion $(GameVersion))" />
+  </Target>
+
+  <!-- Debug/Release: drop the DLL straight into the game's Plugins folder for quick testing. -->
+  <Target Name="CopyToPlugins" AfterTargets="Build"
+          Condition="'$(CopyToPlugins)' == 'true' And Exists('$(BeatSaberDir)/Plugins')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BeatSaberDir)/Plugins" />
+  </Target>
+
+  <!-- Release: also produce a zip laid out for unpacking into the game folder. -->
+  <Target Name="PackageZip" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <StageDir>$(OutputPath)zip/stage/</StageDir>
+      <ZipPath>$(OutputPath)zip/$(PluginId)-$(Version)-bs$(GameVersion).zip</ZipPath>
+    </PropertyGroup>
+    <RemoveDir Directories="$(StageDir)" />
+    <MakeDir Directories="$(StageDir)Plugins" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(StageDir)Plugins" />
+    <ZipDirectory SourceDirectory="$(StageDir)" DestinationFile="$(ZipPath)" Overwrite="true" />
+    <Message Importance="high" Text="Packaged $(ZipPath)" />
+  </Target>
+
+</Project>
