@@ -1,4 +1,5 @@
 Duplicati/Duplicati.csproj.user
-Duplicati/obj/Debug/net472/Duplicati.dll
-Duplicati/obj/Debug/net472/Duplicati.pdb
+Duplicati/obj/Debug
+Duplicati/obj/Debug
 Duplicati/bin
+Duplicati/obj/Release
