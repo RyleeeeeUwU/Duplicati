@@ -1,7 +1,7 @@
 {
 "author": "Ryleeeee",
 "description": "Removes duplicate maps from CustomLevels at game start, keeping one copy.",
-"gameVersion": "1.40.8",
+"gameVersion": "1.44.1",
 "id": "Duplicati",
 "name": "Duplicati",
 "version": "1.0.0",
