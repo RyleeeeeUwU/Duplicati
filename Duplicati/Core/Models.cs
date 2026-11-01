@@ -57,6 +57,8 @@ namespace Duplicati.Core
         public int LevelsScanned { get; set; }
         public int LevelsSkipped { get; set; }
         public int DuplicateGroups { get; set; }
+        public int DuplicatesFound { get; set; }
+        public bool CustomLevelsFolderMissing { get; set; }
         public int Removed { get; set; }
         public int Failed { get; set; }
         public TimeSpan Elapsed { get; set; }

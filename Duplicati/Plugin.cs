@@ -1,11 +1,15 @@
 using System;
 using System.IO;
+using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage.MenuButtons;
 using Duplicati.Configuration;
 using Duplicati.Core;
+using Duplicati.UI;
+using HMUI;
 using IPA;
-using IPA.Config;
 using IPA.Config.Stores;
 using IPA.Utilities;
+using BeatSaberMarkupLanguage.Util;
 using IPALogger = IPA.Logging.Logger;
 
 namespace Duplicati
@@ -16,8 +20,11 @@ namespace Duplicati
         internal static IPALogger Log { get; private set; }
         internal static PluginConfig Settings { get; private set; }
 
+        private static MenuButton _menuButton;
+        private static DuplicatiFlowCoordinator _flowCoordinator;
+
         [Init]
-        public Plugin(IPALogger logger, Config config)
+        public Plugin(IPALogger logger, IPA.Config.Config config)
         {
             Log = logger;
             Settings = config.Generated<PluginConfig>();
@@ -26,44 +33,61 @@ namespace Duplicati
         [OnStart]
         public void OnApplicationStart()
         {
-            if (!Settings.Enabled)
-            {
-                Log.Info("Duplicati is disabled in UserData/Duplicati.json.");
-                return;
-            }
+            // BSML raises this after its main-menu objects (including MenuButtons) are ready.
+            // This deliberately does not scan or modify the song library at startup.
+            MainMenuAwaiter.MainMenuInitializing += RegisterMenuButton;
+            Log.Info("Duplicati loaded. Open Mods > Duplicati to scan for duplicate maps.");
+        }
 
+        private static void RegisterMenuButton()
+        {
             try
             {
-                string customLevels = Path.Combine(UnityGame.InstallPath, "Beat Saber_Data", "CustomLevels");
+                if (_menuButton != null)
+                    return;
 
-                var options = new CleanOptions
-                {
-                    DryRun = Settings.DryRun,
-                    PermanentlyDelete = Settings.PermanentlyDelete,
-                    QuarantineDirectory = Path.Combine(UnityGame.UserDataPath, "Duplicati", "Removed"),
-                };
-
-                Log.Info("Scanning " + customLevels + (options.DryRun ? " (dry run)" : string.Empty));
-                CleanSummary summary = LibraryCleaner.Run(customLevels, options, new IpaLog(Log));
-
-                Log.Info(string.Format(
-                    "Done in {0:0.0}s: {1} levels scanned, {2} skipped, {3} duplicate sets, {4} removed, {5} failed.",
-                    summary.Elapsed.TotalSeconds, summary.LevelsScanned, summary.LevelsSkipped,
-                    summary.DuplicateGroups, summary.Removed, summary.Failed));
+                _flowCoordinator = BeatSaberUI.CreateFlowCoordinator<DuplicatiFlowCoordinator>();
+                _menuButton = new MenuButton("Duplicati", ShowFlowCoordinator);
+                MenuButtons.Instance.RegisterButton(_menuButton);
+                Log.Info("Registered the Duplicati menu button.");
             }
             catch (Exception ex)
             {
-                // A cleanup problem must never take the game down.
-                Log.Error("Duplicati failed: " + ex);
+                Log.Error("Could not register the Duplicati menu button: " + ex);
             }
+        }
+
+        private static void ShowFlowCoordinator()
+        {
+            if (_flowCoordinator == null)
+                return;
+
+            BeatSaberUI.MainFlowCoordinator.PresentFlowCoordinator(_flowCoordinator);
         }
 
         [OnExit]
         public void OnApplicationQuit()
         {
+            MainMenuAwaiter.MainMenuInitializing -= RegisterMenuButton;
+
+            if (_menuButton != null && MenuButtons.Instance != null)
+            {
+                MenuButtons.Instance.UnregisterButton(_menuButton);
+                _menuButton = null;
+            }
         }
 
-        private sealed class IpaLog : Core.ILog
+        internal static string CustomLevelsPath
+        {
+            get { return Path.Combine(UnityGame.InstallPath, "Beat Saber_Data", "CustomLevels"); }
+        }
+
+        internal static string QuarantinePath
+        {
+            get { return Path.Combine(UnityGame.UserDataPath, "Duplicati", "Removed"); }
+        }
+
+        internal sealed class IpaLog : Core.ILog
         {
             private readonly IPALogger _logger;
 

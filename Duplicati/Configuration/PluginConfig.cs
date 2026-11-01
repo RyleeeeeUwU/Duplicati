@@ -10,9 +10,6 @@ namespace Duplicati.Configuration
     /// </summary>
     internal class PluginConfig
     {
-        /// <summary>Master switch. When false the mod does nothing at startup.</summary>
-        public virtual bool Enabled { get; set; } = true;
-
         /// <summary>Log what would be removed without touching any files.</summary>
         public virtual bool DryRun { get; set; } = false;
 

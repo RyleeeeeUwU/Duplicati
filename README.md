@@ -1,35 +1,38 @@
 # Duplicati
 
-A Beat Saber (PC) mod that finds duplicate maps in your `CustomLevels` folder when the game starts, and removes them so you keep only one copy of each.
+A Beat Saber (PC) mod that finds duplicate maps in your `CustomLevels` folder when you ask it to, and removes them so you keep only one copy of each.
 
-- **Game versions:** Beat Saber **1.29.1** to **1.44.1**
-- **Requires:** [BSIPA](https://github.com/nike4613/BeatSaber-IPA-Reloaded) 4.3.0 or newer
-- **Safe by default:** duplicates are moved to a recovery folder. They are only deleted if you turn that on.
+- **Game versions:** **1.39.1** to **1.44.1**
+- **Requires:** [BSIPA](https://github.com/nike4613/BeatSaber-IPA-Reloaded) 4.3.0 or newer and [BeatSaberMarkupLanguage (BSML)](https://github.com/monkeymanboy/BeatSaberMarkupLanguage) 1.12.0 or newer.
+- **Safe by default:** duplicates are moved to a recovery folder. They are only deleted permanently if you turn that on.
 
 ---
 
 ## Installation
 
 1. Mod Beat Saber [BSManager](https://github.com/Zagrios/bs-manager).
-2. Download the zip that matches your game version from the [Releases](../../releases) page, for example `Duplicati-1.0.0-bs1.40.8.zip`.
+2. Download the zip that matches your game version from the [Releases](../../releases) page, for example `Duplicati-1.1.0-bs1.40.8.zip`.
 3. Extract it into your Beat Saber folder, so that the DLL ends up at `Beat Saber/Plugins/Duplicati.dll`.
-4. Start the game. Duplicati runs automatically.
+4. Make sure BSML is installed, then start the game.
+5. Open **Mods → Duplicati** from the left side of the main menu.
+6. Choose your options and press **Scan and remove duplicates**. Duplicati does not scan or modify songs at startup.
 
 > [!TIP]
-> To see what would be removed before anything is moved, create `UserData/Duplicati.json` yourself before your first launch, with `"DryRun": true` (see [Configuration](#configuration)), then check the log.
+> Enable **Dry Run** in the Duplicati menu first to see how many duplicates would be removed without changing any files.
 
 ---
 
 ## How it works
 
-Duplicati runs once each time the game starts:
+When you press **Scan and remove duplicates**, Duplicati runs the following steps on a background worker so filesystem scanning and removal do not block the game's UI:
 
 1. **Scan** every level folder under `Beat Saber_Data/CustomLevels` (any folder that directly contains an `Info.dat`).
 2. **Fingerprint** each level from its content.
 3. **Group** levels that have the same fingerprint.
 4. **Keep** one level from each group and move or delete the others.
-5. **Log** a summary, for example:
-   `Done in 2.3s: 1840 levels scanned, 2 skipped, 17 duplicate sets, 21 removed, 0 failed.`
+5. **Show** a status message while scanning, then report the number of duplicate copies found/removed.
+6. **Log** a summary, for example:
+   `Done in 49.3s: 10840 levels scanned, 2 skipped, 17 duplicate sets, 21 removed, 0 failed.`
 
 ### What counts as a duplicate
 
@@ -65,7 +68,6 @@ BSIPA creates the config file at `UserData/Duplicati.json` the first time you la
 
 ```json
 {
-  "Enabled": true,
   "DryRun": false,
   "PermanentlyDelete": false
 }
@@ -73,8 +75,7 @@ BSIPA creates the config file at `UserData/Duplicati.json` the first time you la
 
 | Key | Default | What it does |
 | --- | --- | --- |
-| `Enabled` | `true` | Turns the mod on or off. When it is `false`, nothing is scanned. |
-| `DryRun` | `false` | Only writes to the log what would be removed. No files are changed. |
+| `DryRun` | `false` | Only reports what would be removed. No files are changed. |
 | `PermanentlyDelete` | `false` | Deletes duplicates permanently instead of moving them to `UserData/Duplicati/Removed`. |
 
 ---
@@ -90,7 +91,7 @@ Beat Saber/UserData/Duplicati/Removed/
 If a folder with the same name is already there, the new one gets a numbered suffix (`Song (2)`, `Song (3)`, and so on). Once you have checked that everything is fine, you can delete this folder to free up space.
 
 > [!NOTE]
-> If you move a map from `Removed` back into `CustomLevels` while the other copy is still there, Duplicati will remove it again on the next launch. If you would rather keep that copy, delete the other one first.
+> If you move a map from `Removed` back into `CustomLevels` while the other copy is still there, Duplicati will remove it again the next time you run a scan. If you would rather keep that copy, delete the other one first.
 
 ---
 
@@ -104,9 +105,9 @@ If a folder with the same name is already there, the new one gets a numbered suf
 - **Moving across drives** (for example, `CustomLevels` on a different drive from `UserData`) copies the folder first and only deletes the original once the copy has completed. If the original cannot be deleted, the copy is undone so it does not pile up.
 - **Errors never crash the game:** any problem is written to the log and the game continues normally.
 
-### Startup time
+### Responsiveness
 
-The scan runs while the game is starting up. With a large map library, startup can take a few seconds longer. The log shows exactly how long the scan took. Look for `Duplicati` in `Logs/_latest.log` in the game folder.
+The scan and file operations run on a background worker. The Duplicati menu immediately shows `Scanning for duplicates...` and updates with the result when the work is complete. The game's UI remains available while the scan runs. Only one scan can run at a time. The log shows exactly how long the scan took; look for `Duplicati` in `Logs/_latest.log` in the game folder.
 
 ---
 
@@ -115,7 +116,7 @@ The scan runs while the game is starting up. With a large map library, startup c
 ### Requirements
 
 - A recent [.NET SDK](https://dotnet.microsoft.com/download). The project targets .NET Framework 4.7.2 and uses the `Microsoft.NETFramework.ReferenceAssemblies` package, so it also builds on Linux and macOS without the .NET Framework Developer Pack.
-- A modded Beat Saber install. The build only references `IPA.Loader.dll` and `Newtonsoft.Json.dll` from `Beat Saber_Data/Managed`.
+- A modded Beat Saber install with BSIPA and BSML installed. The project references `IPA.Loader.dll`, `Newtonsoft.Json.dll`, BSML, and the required Beat Saber/Unity UI assemblies from your game folder.
 
 ### Point the build at your game folder
 
@@ -149,7 +150,7 @@ To build a zip for every supported game version in one go:
 ./scripts/package.sh
 ```
 
-The mod does not reference any game assemblies, so the same DLL works for every supported version. Only the `gameVersion` in the generated `manifest.json` is different.
+The in-game menu references BSML and Beat Saber UI assemblies, including `BeatSaber.ViewSystem.dll` (which contains the `HMUI.FlowCoordinator` and `HMUI.ViewController` types used by this menu), so build against the Beat Saber installation you intend to use. The generated `manifest.json` is labelled with the selected `gameVersion`; that label does not itself guarantee compatibility with every game patch.
 
 ### Plugin metadata
 
@@ -161,9 +162,13 @@ The plugin ID, name, author, version, description and default game version are s
 
 ```
 Duplicati/
-├── Plugin.cs                    # BSIPA entry point: reads the config and starts the cleanup
+├── Plugin.cs                    # BSIPA entry point: registers the in-game Mods button
 ├── Configuration/
 │   └── PluginConfig.cs          # Settings stored in UserData/Duplicati.json
+├── UI/
+│   ├── Duplicati.bsml             # Embedded BSML menu layout
+│   ├── DuplicatiFlowCoordinator.cs
+│   └── DuplicatiViewController.cs # Starts scans on a background worker
 └── Core/                        # Cleanup logic, independent of BSIPA
     ├── LibraryCleaner.cs        # Runs the whole process: scan → fingerprint → group → remove
     ├── LevelScanner.cs          # Finds level folders (skipping links)

@@ -18,21 +18,49 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Only BSIPA and the Newtonsoft.Json that ships with the game are referenced; no game
-         assemblies are needed, which is why one DLL works for every supported game version.
-         Forward slashes work for MSBuild on both Windows and Linux. -->
+    <!-- Forward slashes work for MSBuild on both Windows and Linux. The BSML-backed menu uses
+         HMUI, TextMeshPro and Unity UI types, so these game assemblies are build references only. -->
     <Reference Include="IPA.Loader" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/IPA.Loader.dll" Private="false" />
     <Reference Include="Newtonsoft.Json" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/Newtonsoft.Json.dll" Private="false" />
+    <Reference Include="BeatSaberMarkupLanguage" HintPath="$(BeatSaberDir)/Plugins/BSML.dll" Private="false" />
+    <Reference Include="HMUI" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/HMUI.dll" Private="false">
+      <Publicize>true</Publicize>
+    </Reference>
+    <!-- In Beat Saber 1.39.1, FlowCoordinator and ViewController are defined in this assembly,
+         even though their namespace is HMUI. HMUI alone is not sufficient to compile BSML UI. -->
+    <Reference Include="BeatSaber.ViewSystem" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/BeatSaber.ViewSystem.dll" Private="false" />
+    <Reference Include="Unity.TextMeshPro" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/Unity.TextMeshPro.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="UnityEngine.UI" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/UnityEngine.UI.dll" Private="false" />
+    <Reference Include="Assembly-CSharp" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/Assembly-CSharp.dll" Private="false" Condition="Exists('$(BeatSaberDir)/Beat Saber_Data/Managed/Assembly-CSharp.dll')" />
+    <Reference Include="Main" HintPath="$(BeatSaberDir)/Beat Saber_Data/Managed/Main.dll" Private="false" Condition="Exists('$(BeatSaberDir)/Beat Saber_Data/Managed/Main.dll')">
+      <Publicize>true</Publicize>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
     <!-- Lets the project build without a .NET Framework developer pack (Linux/macOS, CI). -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <!-- BSML publicizes game UI assemblies so mods can inherit FlowCoordinator/ViewController. -->
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <Target Name="CheckBeatSaberDir" BeforeTargets="ResolveAssemblyReferences"
           Condition="'$(BeatSaberDir)' == '' Or !Exists('$(BeatSaberDir)/Beat Saber_Data/Managed/IPA.Loader.dll')">
     <Error Text="BeatSaberDir is not set or is not a BSIPA-patched Beat Saber install (IPA.Loader.dll not found under Beat Saber_Data/Managed). Set it in Duplicati.csproj.user (see Duplicati.csproj.user.example), or pass -p:BeatSaberDir=..." />
+  </Target>
+
+  <Target Name="CheckBSML" BeforeTargets="ResolveAssemblyReferences"
+          Condition="!Exists('$(BeatSaberDir)/Plugins/BSML.dll')">
+    <Error Text="BeatSaberMarkupLanguage.dll was not found in Beat Saber/Plugins. Install BSML and build again." />
+  </Target>
+
+  <Target Name="CheckViewSystem" BeforeTargets="ResolveAssemblyReferences"
+          Condition="!Exists('$(BeatSaberDir)/Beat Saber_Data/Managed/BeatSaber.ViewSystem.dll')">
+    <Error Text="BeatSaber.ViewSystem.dll was not found under Beat Saber_Data/Managed. Check that BeatSaberDir points to your Beat Saber 1.39.1 install." />
   </Target>
 
   <!-- BSIPA requires manifest.json as an embedded resource. The embed is declared statically here
@@ -48,6 +76,7 @@
   <ItemGroup>
     <EmbeddedResource Include="$(ManifestPath)" LogicalName="$(RootNamespace).manifest.json" />
     <EmbeddedResource Include="$(ManifestPathPlain)" LogicalName="manifest.json" />
+    <EmbeddedResource Include="UI/Duplicati.bsml" LogicalName="Duplicati.UI.Duplicati.bsml" />
   </ItemGroup>
 
   <Target Name="GenerateManifest" BeforeTargets="CoreCompile">
@@ -60,7 +89,7 @@
       <ManifestLine Include='  "id": "$(PluginId)",' />
       <ManifestLine Include='  "name": "$(PluginName)",' />
       <ManifestLine Include='  "version": "$(Version)",' />
-      <ManifestLine Include='  "dependsOn": { "BSIPA": "^4.3.0" }' />
+      <ManifestLine Include='  "dependsOn": { "BSIPA": "^4.3.0", "BeatSaberMarkupLanguage": "^1.12.0" }' />
       <ManifestLine Include="}" />
     </ItemGroup>
     <WriteLinesToFile File="$(ManifestPath)" Lines="@(ManifestLine)" Overwrite="true" WriteOnlyWhenDifferent="true" />
