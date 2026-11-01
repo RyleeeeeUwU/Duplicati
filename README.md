@@ -2,7 +2,7 @@
 
 A Beat Saber (PC) mod that finds duplicate maps in your `CustomLevels` folder when the game starts, and removes them so you keep only one copy of each.
 
-- **Game versions:** Beat Saber **1.39.1** and **1.40.8**
+- **Game versions:** Beat Saber **1.29.1** to **1.44.1**
 - **Requires:** [BSIPA](https://github.com/nike4613/BeatSaber-IPA-Reloaded) 4.3.0 or newer
 - **Safe by default:** duplicates are moved to a recovery folder. They are only deleted if you turn that on.
 
@@ -10,7 +10,7 @@ A Beat Saber (PC) mod that finds duplicate maps in your `CustomLevels` folder wh
 
 ## Installation
 
-1. Install BSIPA. A mod manager does this for you, for example [BSManager](https://github.com/Zagrios/bs-manager) or [ModAssistant](https://github.com/Assistant/ModAssistant).
+1. Mod Beat Saber [BSManager](https://github.com/Zagrios/bs-manager).
 2. Download the zip that matches your game version from the [Releases](../../releases) page, for example `Duplicati-1.0.0-bs1.40.8.zip`.
 3. Extract it into your Beat Saber folder, so that the DLL ends up at `Beat Saber/Plugins/Duplicati.dll`.
 4. Start the game. Duplicati runs automatically.
@@ -181,3 +181,7 @@ scripts/package.sh               # Builds release zips for every supported game 
 ## Author
 
 Made by **Ryleeeee**.
+
+## Disclaimer
+
+This README.md file was written almost entirely by Claude.
