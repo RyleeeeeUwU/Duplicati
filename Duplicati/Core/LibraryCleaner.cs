@@ -15,7 +15,10 @@ namespace Duplicati.Core
 
             if (!Directory.Exists(customLevelsPath))
             {
+                summary.CustomLevelsFolderMissing = true;
                 log.Warn("CustomLevels folder not found: " + customLevelsPath);
+                timer.Stop();
+                summary.Elapsed = timer.Elapsed;
                 return summary;
             }
 
@@ -45,6 +48,8 @@ namespace Duplicati.Core
 
                 foreach (LevelEntry duplicate in group.Duplicates)
                 {
+                    summary.DuplicatesFound++;
+
                     if (options.DryRun)
                     {
                         log.Info("  [dry run] would remove '" + duplicate.FolderName + "'");

@@ -1,0 +1,9 @@
+<vertical child-expand-height="false" spacing="2">
+    <text text="Find duplicate custom songs" align="Center" />
+
+    <toggle-setting value="DryRun" text="Dry Run (scan only; do not change files)" apply-on-change="true" />
+    <toggle-setting value="PermanentlyDelete" text="Permanently Delete (otherwise move to recovery)" apply-on-change="true" />
+
+    <text id="statusText" text="Ready." align="Center" font-size="5" />
+    <button text="Scan and remove duplicates" on-click="StartScan" />
+</vertical>
