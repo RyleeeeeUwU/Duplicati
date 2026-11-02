@@ -10,7 +10,7 @@
     <Description>Finds and removes duplicate maps from CustomLevels.</Description>
     <ProjectSource>https://github.com/RyleeeeeUwU/Duplicati</ProjectSource>
 
-    <!-- Exact game version this build is labelled for: 1.29.1 to 1.44.1.
+    <!-- Exact game version this build is labelled for: 1.39.0 to 1.44.1.
          Override per build with -p:GameVersion=1.40.8 (global properties win over this file). -->
     <GameVersion>1.39.1</GameVersion>
   </PropertyGroup>
