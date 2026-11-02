@@ -97,8 +97,7 @@ If a folder with the same name is already there, the new one gets a numbered suf
 
 ## Safety
 
-- **Only `Beat Saber_Data/CustomLevels`** is scanned. `CustomWIPLevels` and any extra song folders set up in SongCore are never touched.
-- **Subfolders are supported:** Duplicati scans inside folders that are not levels themselves, but never goes inside a level folder.
+- **Only `Beat Saber_Data/CustomLevels`** is scanned. `CustomWIPLevels` are never touched.
 - **Symlinks and junctions** inside `CustomLevels` are skipped, which prevents loops and means nothing is ever deleted through a link.
 - **Levels that cannot be read** with certainty are skipped and never removed.
 - **The copy being kept is checked again** right before each removal. If it has disappeared, nothing is removed.
