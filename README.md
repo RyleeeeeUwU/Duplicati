@@ -6,6 +6,8 @@ A Beat Saber (PC) mod that finds duplicate maps in your `CustomLevels` folder wh
 - **Requires:** [BSIPA](https://github.com/nike4613/BeatSaber-IPA-Reloaded) 4.3.0 or newer and [BeatSaberMarkupLanguage (BSML)](https://github.com/monkeymanboy/BeatSaberMarkupLanguage) 1.12.0 or newer.
 - **Safe by default:** duplicates are moved to a recovery folder. They are only deleted permanently if you turn that on.
 
+This is my first time making a Beat Saber mod. Don't expect it to be perfect, though it does what it's meant to do really well.
+
 ---
 
 ## Installation
