@@ -2,7 +2,7 @@
 
 A Beat Saber (PC) mod that finds duplicate maps in your `CustomLevels` folder when you ask it to, and removes them so you keep only one copy of each.
 
-- **Game versions:** **1.39.1** to **1.44.1**
+- **Game versions:** **1.39.0** to **1.44.1**
 - **Requires:** [BSIPA](https://github.com/nike4613/BeatSaber-IPA-Reloaded) 4.3.0 or newer and [BeatSaberMarkupLanguage (BSML)](https://github.com/monkeymanboy/BeatSaberMarkupLanguage) 1.12.0 or newer.
 - **Safe by default:** duplicates are moved to a recovery folder. They are only deleted permanently if you turn that on.
 
