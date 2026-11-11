@@ -468,7 +468,7 @@
     "/home/ryleeeee/.nuget/packages/": {}
   },
   "project": {
-    "version": "1.1.0",
+    "version": "1.1.1",
     "restore": {
       "projectUniqueName": "/home/ryleeeee/Documents/GitHub/Duplicati/Duplicati/Duplicati.csproj",
       "projectName": "Duplicati",
@@ -487,7 +487,6 @@
       },
       "frameworks": {
         "net472": {
-          "framework": "net472",
           "targetAlias": "net472",
           "projectReferences": {}
         }
@@ -506,7 +505,6 @@
     },
     "frameworks": {
       "net472": {
-        "framework": "net472",
         "targetAlias": "net472",
         "dependencies": {
           "BepInEx.AssemblyPublicizer.MSBuild": {

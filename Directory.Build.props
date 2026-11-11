@@ -6,7 +6,7 @@
     <PluginId>Duplicati</PluginId>
     <PluginName>Duplicati</PluginName>
     <Authors>Ryleeeee</Authors>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Description>Finds and removes duplicate maps from CustomLevels.</Description>
     <ProjectSource>https://github.com/RyleeeeeUwU/Duplicati</ProjectSource>
 

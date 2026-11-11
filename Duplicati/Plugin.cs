@@ -33,48 +33,71 @@ namespace Duplicati
         [OnStart]
         public void OnApplicationStart()
         {
-            // BSML raises this after its main-menu objects (including MenuButtons) are ready.
-            // This deliberately does not scan or modify the song library at startup.
             MainMenuAwaiter.MainMenuInitializing += RegisterMenuButton;
             Log.Info("Duplicati loaded. Open Mods > Duplicati to scan for duplicate maps.");
         }
 
+        private static int _registrations;
+        
         private static void RegisterMenuButton()
         {
             try
             {
-                if (_menuButton != null)
-                    return;
+                UnregisterMenuButton();
 
                 _flowCoordinator = BeatSaberUI.CreateFlowCoordinator<DuplicatiFlowCoordinator>();
                 _menuButton = new MenuButton("Duplicati", ShowFlowCoordinator);
                 MenuButtons.Instance.RegisterButton(_menuButton);
-                Log.Info("Registered the Duplicati menu button.");
+
+                _registrations++;
+                Log.Info("Registered the Duplicati menu button (menu build #" + _registrations + ").");
             }
             catch (Exception ex)
             {
                 Log.Error("Could not register the Duplicati menu button: " + ex);
             }
         }
+        
+        private static void UnregisterMenuButton()
+        {
+            if (_menuButton == null)
+                return;
+
+            try
+            {
+                if (MenuButtons.Instance != null)
+                    MenuButtons.Instance.UnregisterButton(_menuButton);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("Could not unregister the previous Duplicati menu button (continuing): " + ex.Message);
+            }
+            finally
+            {
+                _menuButton = null;
+            }
+        }
 
         private static void ShowFlowCoordinator()
         {
-            if (_flowCoordinator == null)
-                return;
+            try
+            {
+                if (_flowCoordinator == null)
+                    _flowCoordinator = BeatSaberUI.CreateFlowCoordinator<DuplicatiFlowCoordinator>();
 
-            BeatSaberUI.MainFlowCoordinator.PresentFlowCoordinator(_flowCoordinator);
+                BeatSaberUI.MainFlowCoordinator.PresentFlowCoordinator(_flowCoordinator);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Could not open the Duplicati menu: " + ex);
+            }
         }
 
         [OnExit]
         public void OnApplicationQuit()
         {
             MainMenuAwaiter.MainMenuInitializing -= RegisterMenuButton;
-
-            if (_menuButton != null && MenuButtons.Instance != null)
-            {
-                MenuButtons.Instance.UnregisterButton(_menuButton);
-                _menuButton = null;
-            }
+            UnregisterMenuButton();
         }
 
         internal static string CustomLevelsPath
