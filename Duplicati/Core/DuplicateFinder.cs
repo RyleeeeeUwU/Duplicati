@@ -20,7 +20,8 @@ namespace Duplicati.Core
 
         /// <summary>
         /// Groups levels by fingerprint and picks the one to keep in each group of two or more.
-        /// Keeper preference: BeatSaver-style folder name, then the oldest folder, then path order
+        /// Keeper preference: BeatSaver-style folder name, then the modern "key (Song - Mapper)" scheme over the
+        /// old "key (Mapper - Song)" one (so playlists don't re-download the modern name), then the oldest folder, then path order
         /// (so the result is deterministic).
         /// </summary>
         public static List<DuplicateGroup> FindGroups(IEnumerable<LevelEntry> entries)
@@ -31,6 +32,7 @@ namespace Duplicati.Core
             {
                 List<LevelEntry> ordered = group
                     .OrderByDescending(e => LooksLikeBeatSaverFolder(e.FolderName))
+                    .ThenByDescending(e => (int)e.Naming)
                     .ThenBy(e => e.CreatedUtc)
                     .ThenBy(e => e.Path, StringComparer.OrdinalIgnoreCase)
                     .ToList();

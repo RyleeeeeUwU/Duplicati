@@ -99,6 +99,9 @@ namespace Duplicati.UI
                             finalStatus += string.Format(" {0} could not be removed.", summary.Failed);
                     }
 
+                    if (summary.SizeOnlyMode)
+                        finalStatus += " (Matched by file sizes; duplicates were moved to quarantine.)";
+
                     Plugin.Log.Info(string.Format(
                         "Done in {0:0.0}s: {1} levels scanned, {2} skipped, {3} duplicate sets, " +
                         "{4} duplicate copies found, {5} removed, {6} failed.",

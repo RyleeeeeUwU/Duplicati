@@ -7,8 +7,9 @@ namespace Duplicati.Core
     /// <summary>A single custom level folder together with its content fingerprint.</summary>
     public sealed class LevelEntry
     {
-        public LevelEntry(string path, string fingerprint, DateTime createdUtc)
+        public LevelEntry(string path, string fingerprint, DateTime createdUtc, LevelNameInfo names = null)
         {
+            Names = names;
             Path = path;
             Fingerprint = fingerprint;
             CreatedUtc = createdUtc;
@@ -19,6 +20,8 @@ namespace Duplicati.Core
         public string Path { get; private set; }
         public string FolderName { get; private set; }
         public string Fingerprint { get; private set; }
+        public LevelNameInfo Names { get; private set; }
+        public NamingScheme Naming { get { return LevelNaming.Classify(FolderName, Names); } }
         public DateTime CreatedUtc { get; private set; }
     }
 
@@ -61,6 +64,8 @@ namespace Duplicati.Core
         public bool CustomLevelsFolderMissing { get; set; }
         public int Removed { get; set; }
         public int Failed { get; set; }
+        /// <summary>True when beatmap contents could not be read and name+size matching was used.</summary>
+        public bool SizeOnlyMode { get; set; }
         public TimeSpan Elapsed { get; set; }
     }
 }

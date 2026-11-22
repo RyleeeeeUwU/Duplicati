@@ -49,6 +49,16 @@ namespace Duplicati.Core
         /// </summary>
         public static bool TryCompute(string levelDir, out string fingerprint, out string error)
         {
+            return TryCompute(levelDir, true, out fingerprint, out error);
+        }
+
+        /// <summary>
+        /// When <paramref name="hashContents"/> is false, referenced files are identified by name and
+        /// size only (no read), which is weaker but works when another mod blocks reads of beatmap
+        /// files. Throws <see cref="ContentReadBlockedException"/> if reading is blocked.
+        /// </summary>
+        public static bool TryCompute(string levelDir, bool hashContents, out string fingerprint, out string error)
+        {
             fingerprint = null;
             error = null;
 
@@ -88,7 +98,10 @@ namespace Duplicati.Core
                         else
                         {
                             Feed(sha, Encoding.UTF8.GetBytes("\0file:" + name + "\0"));
-                            FeedFile(sha, full);
+                            if (hashContents)
+                                FeedFile(sha, full);
+                            else
+                                Feed(sha, Encoding.UTF8.GetBytes("size:" + new FileInfo(full).Length));
                         }
                     }
 
@@ -159,13 +172,28 @@ namespace Duplicati.Core
 
         private static void FeedFile(HashAlgorithm hash, string path)
         {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            try
             {
-                var buffer = new byte[81920];
-                int read;
-                while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    hash.TransformBlock(buffer, 0, read, null, 0);
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    var buffer = new byte[81920];
+                    int read;
+                    while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                        hash.TransformBlock(buffer, 0, read, null, 0);
+                }
+            }
+            catch (Exception ex) when (!(ex is IOException || ex is UnauthorizedAccessException))
+            {
+                // E.g. SongCore (1.44+) throws a ZenjectException when a mod reads beatmap files.
+                throw new ContentReadBlockedException(path, ex);
             }
         }
+    }
+
+    /// <summary>Reading a beatmap file was refused by something other than ordinary IO failure.</summary>
+    public sealed class ContentReadBlockedException : Exception
+    {
+        public ContentReadBlockedException(string path, Exception inner)
+            : base("Reading '" + path + "' was blocked: " + inner.Message, inner) { }
     }
 }

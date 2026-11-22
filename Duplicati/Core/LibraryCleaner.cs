@@ -22,21 +22,33 @@ namespace Duplicati.Core
                 return summary;
             }
 
-            var entries = new List<LevelEntry>();
-            foreach (string dir in LevelScanner.FindLevelDirectories(customLevelsPath, log))
+            List<LevelEntry> entries;
+            bool hashContents = true;
+            while (true)
             {
-                summary.LevelsScanned++;
-
-                string fingerprint, error;
-                if (!LevelFingerprint.TryCompute(dir, out fingerprint, out error))
+                summary.LevelsScanned = 0;
+                summary.LevelsSkipped = 0;
+                try
                 {
-                    // Anything we cannot read with certainty is left alone.
-                    summary.LevelsSkipped++;
-                    log.Warn("Skipping " + dir + " (" + error + ")");
-                    continue;
+                    entries = FingerprintAll(customLevelsPath, hashContents, summary, log);
+                    break;
                 }
-
-                entries.Add(new LevelEntry(dir, fingerprint, Directory.GetCreationTimeUtc(dir)));
+                catch (ContentReadBlockedException ex) when (hashContents)
+                {
+                    // Another mod (e.g. SongCore on 1.44+) forbids reading beatmap files. Fall back to
+                    // name+size fingerprints for the whole scan, and never delete permanently.
+                    log.Warn(ex.Message);
+                    log.Warn("Beatmap contents cannot be read; comparing Info.dat plus file names and sizes instead. " +
+                             "Duplicates will be quarantined, never permanently deleted.");
+                    hashContents = false;
+                    summary.SizeOnlyMode = true;
+                    options = new CleanOptions
+                    {
+                        DryRun = options.DryRun,
+                        PermanentlyDelete = false,
+                        QuarantineDirectory = options.QuarantineDirectory,
+                    };
+                }
             }
 
             List<DuplicateGroup> groups = DuplicateFinder.FindGroups(entries);
@@ -79,6 +91,28 @@ namespace Duplicati.Core
             timer.Stop();
             summary.Elapsed = timer.Elapsed;
             return summary;
+        }
+    
+        private static List<LevelEntry> FingerprintAll(
+            string customLevelsPath, bool hashContents, CleanSummary summary, ILog log)
+        {
+            var entries = new List<LevelEntry>();
+            foreach (string dir in LevelScanner.FindLevelDirectories(customLevelsPath, log))
+            {
+                summary.LevelsScanned++;
+
+                string fingerprint, error;
+                if (!LevelFingerprint.TryCompute(dir, hashContents, out fingerprint, out error))
+                {
+                    // Anything we cannot read with certainty is left alone.
+                    summary.LevelsSkipped++;
+                    log.Warn("Skipping " + dir + " (" + error + ")");
+                    continue;
+                }
+
+                entries.Add(new LevelEntry(dir, fingerprint, Directory.GetCreationTimeUtc(dir), LevelNaming.TryReadNames(dir)));
+            }
+            return entries;
         }
     }
 }

@@ -48,6 +48,8 @@ These are **not** treated as duplicates, on purpose:
 | An updated or re-uploaded map with changed difficulties | The content is different |
 | A level with a missing, unreadable or invalid `Info.dat` | It cannot be checked reliably, so it is skipped and logged |
 
+**Beat Saber 1.44+ note:** newer SongCore versions block other mods from reading beatmap files. When that happens, Duplicati falls back to comparing `Info.dat` plus the name and size of each referenced file. This is slightly less strict than a byte comparison, so in that mode duplicates are always moved to quarantine, never permanently deleted.
+
 The song audio and cover images are not hashed: they are large files, and `Info.dat` already identifies the chart. The fingerprint is internal to Duplicati and is **not** the same as the BeatSaver map hash, so it is never compared with BeatSaver.
 
 Both `Info.dat` formats are supported: v2/v3 (`_beatmapFilename`) and v4 (`beatmapDataFilename`, `lightshowDataFilename`, `audioDataFilename`).
@@ -57,8 +59,9 @@ Both `Info.dat` formats are supported: v2/v3 (`_beatmapFilename`) and v4 (`beatm
 Within each group of duplicates, Duplicati keeps:
 
 1. a folder named like a BeatSaver download (`<hex key> (<song> - <mapper>)`, for example `2ab3f (Song - Mapper)`);
-2. otherwise, the oldest folder (by creation date);
-3. otherwise, the first folder in alphabetical order, so the result is always the same.
+2. then the modern naming scheme `key (Song - Mapper)` over the old `key (Mapper - Song)` (detected by matching the song title, then the mapper name, from `Info.dat`), so playlists don't re-download the removed copy;
+3. otherwise, the oldest folder (by creation date);
+4. otherwise, the first folder in alphabetical order, so the result is always the same.
 
 The folder name is only used to choose which copy to keep. It never decides whether two levels are duplicates.
 
